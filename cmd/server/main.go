@@ -1,21 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/Katoga/librespeed_exporter/internal/server"
 )
 
 func main() {
-	port := 51423
+	port := uint16(51423)
 
-	reg := prometheus.NewRegistry()
-
-	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
-
-	log.Printf("listening on %d", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+	log.Fatal(server.NewServer().Serve(port))
 }
