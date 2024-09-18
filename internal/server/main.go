@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Katoga/librespeed_exporter/internal/collector"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -19,7 +21,11 @@ func NewServer() *server {
 }
 
 func (s *server) Serve(port uint16, includeSystemCollectors bool) error {
-	reg := prometheus.NewRegistry()
+	reg := prometheus.NewPedanticRegistry()
+
+	reg.MustRegister(
+		collector.NewCollector(),
+	)
 
 	if includeSystemCollectors {
 		reg.MustRegister(
