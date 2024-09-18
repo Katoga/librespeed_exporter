@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -17,8 +18,15 @@ func NewServer() *server {
 	return s
 }
 
-func (s *server) Serve(port uint16) error {
+func (s *server) Serve(port uint16, includeSystemCollectors bool) error {
 	reg := prometheus.NewRegistry()
+
+	if includeSystemCollectors {
+		reg.MustRegister(
+			collectors.NewGoCollector(),
+			collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+		)
+	}
 
 	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
 

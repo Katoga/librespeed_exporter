@@ -8,6 +8,7 @@ import (
 
 func main() {
 	port := uint16(51423)
+	includeSystemCollectors := false
 
-	log.Fatal(server.NewServer().Serve(port))
+	log.Fatal(server.NewServer().Serve(port, includeSystemCollectors))
 }
