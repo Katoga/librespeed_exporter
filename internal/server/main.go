@@ -19,16 +19,25 @@ func NewServer() *server {
 	return s
 }
 
-func (s *server) Serve(listenAddress *string, telemetryPath *string, includeSystemCollectors bool) error {
+func (s *server) Serve(
+	listenAddress *string,
+	telemetryPath *string,
+	enableCollectorGo *bool,
+	enableCollectorProcess *bool,
+) error {
 	reg := prometheus.NewPedanticRegistry()
 
 	reg.MustRegister(
 		collector.NewCollector(),
 	)
 
-	if includeSystemCollectors {
+	if *enableCollectorGo {
 		reg.MustRegister(
 			collectors.NewGoCollector(),
+		)
+	}
+	if *enableCollectorProcess {
+		reg.MustRegister(
 			collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
 		)
 	}
