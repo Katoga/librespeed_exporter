@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	listenAddress := kingpin.Flag("web.listen-address", "Address to listen on").Default(":51423").String()
+	listenAddress := kingpin.Flag("web.listen-address", "Address to listen on").Default(":51423").TCP()
 	telemetryPath := kingpin.Flag("web.telemetry-path", "Path under which to expose metrics").Default("/metrics").String()
 	enableCollectorGo := kingpin.Flag("collectors.go", "Enable GoCollector").Bool()
 	enableCollectorProcess := kingpin.Flag("collectors.process", "Enable ProcessCollector").Bool()
@@ -35,5 +35,5 @@ func main() {
 		)
 	}
 
-	log.Fatal(server.NewServer(registry).Serve(listenAddress, telemetryPath))
+	log.Fatal(server.NewServer(registry).Serve(*listenAddress, telemetryPath))
 }

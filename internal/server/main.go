@@ -2,6 +2,7 @@ package server
 
 import (
 	"log"
+	"net"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -21,13 +22,13 @@ func NewServer(registry *prometheus.Registry) *server {
 }
 
 func (s *server) Serve(
-	listenAddress *string,
+	listenAddress *net.TCPAddr,
 	telemetryPath *string,
 ) error {
 	http.Handle(*telemetryPath, promhttp.HandlerFor(s.reg, promhttp.HandlerOpts{Registry: s.reg}))
 
-	log.Printf("listening on %s", *listenAddress)
+	log.Printf("listening on %v", listenAddress.String())
 	log.Printf("serving metrics on %s", *telemetryPath)
 
-	return http.ListenAndServe(*listenAddress, nil)
+	return http.ListenAndServe(listenAddress.String(), nil)
 }
