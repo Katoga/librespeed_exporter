@@ -24,11 +24,12 @@ func (s *server) Serve(
 	telemetryPath *string,
 	enableCollectorGo *bool,
 	enableCollectorProcess *bool,
+	dataRetrieverCommand *string,
 ) error {
 	reg := prometheus.NewPedanticRegistry()
 
 	reg.MustRegister(
-		collector.NewCollector(),
+		collector.NewCollector(*dataRetrieverCommand),
 	)
 
 	if *enableCollectorGo {

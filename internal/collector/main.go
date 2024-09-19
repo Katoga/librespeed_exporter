@@ -3,6 +3,7 @@ package collector
 import (
 	"encoding/json"
 	"log"
+	"os/exec"
 
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -22,10 +23,13 @@ type results struct {
 }
 
 type collector struct {
+	dataRetrieverCommand string
 }
 
-func NewCollector() *collector {
-	c := &collector{}
+func NewCollector(dataRetrieverCommand string) *collector {
+	c := &collector{
+		dataRetrieverCommand: dataRetrieverCommand,
+	}
 
 	return c
 }
@@ -105,33 +109,11 @@ func (c *collector) getResults() results {
 }
 
 func (c *collector) download() ([]byte, error) {
-	data := `[
-  {
-    "timestamp": "2024-09-18T20:56:48.944852891Z",
-    "server": {
-      "name": "Prague, Czech Republic (Turris)",
-      "url": "http://librespeed.turris.cz"
-    },
-    "client": {
-      "ip": "",
-      "hostname": "",
-      "city": "",
-      "region": "",
-      "country": "",
-      "loc": "",
-      "org": "",
-      "postal": "",
-      "timezone": ""
-    },
-    "bytes_sent": 182681600,
-    "bytes_received": 193406445,
-    "ping": 5,
-    "jitter": 2.37,
-    "upload": 93.67,
-    "download": 99.17,
-    "share": ""
-  }
-]
-`
-	return []byte(data), nil
+	cmd := exec.Command(c.dataRetrieverCommand, "--json", "--server", "85")
+	output, errRun := cmd.Output()
+	if errRun != nil {
+		log.Panicf("Command failed: %s", errRun)
+	}
+
+	return output, nil
 }
