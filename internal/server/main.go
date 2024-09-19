@@ -4,17 +4,18 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Katoga/librespeed_exporter/internal/collector"
-
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-type server struct{}
+type server struct {
+	reg *prometheus.Registry
+}
 
-func NewServer() *server {
-	s := &server{}
+func NewServer(registry *prometheus.Registry) *server {
+	s := &server{
+		reg: registry,
+	}
 
 	return s
 }
@@ -22,28 +23,8 @@ func NewServer() *server {
 func (s *server) Serve(
 	listenAddress *string,
 	telemetryPath *string,
-	enableCollectorGo *bool,
-	enableCollectorProcess *bool,
-	dataRetrieverCommand *string,
 ) error {
-	reg := prometheus.NewPedanticRegistry()
-
-	reg.MustRegister(
-		collector.NewCollector(*dataRetrieverCommand),
-	)
-
-	if *enableCollectorGo {
-		reg.MustRegister(
-			collectors.NewGoCollector(),
-		)
-	}
-	if *enableCollectorProcess {
-		reg.MustRegister(
-			collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		)
-	}
-
-	http.Handle(*telemetryPath, promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
+	http.Handle(*telemetryPath, promhttp.HandlerFor(s.reg, promhttp.HandlerOpts{Registry: s.reg}))
 
 	log.Printf("listening on %s", *listenAddress)
 	log.Printf("serving metrics on %s", *telemetryPath)

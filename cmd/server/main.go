@@ -3,9 +3,12 @@ package main
 import (
 	"log"
 
+	"github.com/Katoga/librespeed_exporter/internal/collector"
 	"github.com/Katoga/librespeed_exporter/internal/server"
 
 	"github.com/alecthomas/kingpin/v2"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 )
 
 func main() {
@@ -17,5 +20,20 @@ func main() {
 
 	kingpin.Parse()
 
-	log.Fatal(server.NewServer().Serve(listenAddress, telemetryPath, enableCollectorGo, enableCollectorProcess, dataRetrieverCommand))
+	registry := prometheus.NewPedanticRegistry()
+	registry.MustRegister(
+		collector.NewCollector(*dataRetrieverCommand),
+	)
+	if *enableCollectorGo {
+		registry.MustRegister(
+			collectors.NewGoCollector(),
+		)
+	}
+	if *enableCollectorProcess {
+		registry.MustRegister(
+			collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+		)
+	}
+
+	log.Fatal(server.NewServer(registry).Serve(listenAddress, telemetryPath))
 }
