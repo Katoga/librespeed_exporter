@@ -19,7 +19,7 @@ func NewServer() *server {
 	return s
 }
 
-func (s *server) Serve(listenAddress *string, includeSystemCollectors bool) error {
+func (s *server) Serve(listenAddress *string, telemetryPath *string, includeSystemCollectors bool) error {
 	reg := prometheus.NewPedanticRegistry()
 
 	reg.MustRegister(
@@ -33,9 +33,10 @@ func (s *server) Serve(listenAddress *string, includeSystemCollectors bool) erro
 		)
 	}
 
-	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
+	http.Handle(*telemetryPath, promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
 
 	log.Printf("listening on %s", *listenAddress)
+	log.Printf("serving metrics on %s", *telemetryPath)
 
 	return http.ListenAndServe(*listenAddress, nil)
 }
