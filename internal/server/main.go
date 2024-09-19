@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -20,7 +19,7 @@ func NewServer() *server {
 	return s
 }
 
-func (s *server) Serve(port uint16, includeSystemCollectors bool) error {
+func (s *server) Serve(listenAddress *string, includeSystemCollectors bool) error {
 	reg := prometheus.NewPedanticRegistry()
 
 	reg.MustRegister(
@@ -36,7 +35,7 @@ func (s *server) Serve(port uint16, includeSystemCollectors bool) error {
 
 	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
 
-	log.Printf("listening on %d", port)
+	log.Printf("listening on %s", *listenAddress)
 
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+	return http.ListenAndServe(*listenAddress, nil)
 }
