@@ -16,7 +16,7 @@ func main() {
 	telemetryPath := kingpin.Flag("web.telemetry-path", "Path under which to expose metrics").Default("/metrics").String()
 	enableCollectorGo := kingpin.Flag("collectors.go", "Enable GoCollector").Bool()
 	enableCollectorProcess := kingpin.Flag("collectors.process", "Enable ProcessCollector").Bool()
-	dataRetrieverCommand := kingpin.Flag("data-retriever-command", "Command to call to get speed data").Default("speedtest-cli").String()
+	dataRetrieverCommand := kingpin.Flag("data-retriever-command", "Command to call to get speed data").Default("speedtest-cli").ExistingFile()
 
 	kingpin.Parse()
 
