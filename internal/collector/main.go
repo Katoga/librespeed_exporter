@@ -2,6 +2,7 @@ package collector
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os/exec"
 
@@ -23,12 +24,20 @@ type results struct {
 }
 
 type collector struct {
-	dataRetrieverCommand string
+	dataRetrieverCommand *string
+	dataRetrieverArgs    []string
 }
 
-func NewCollector(dataRetrieverCommand string) *collector {
+func NewCollector(dataRetrieverCommand *string, librespeedServer *uint8) *collector {
 	c := &collector{
 		dataRetrieverCommand: dataRetrieverCommand,
+	}
+
+	dataRetrieverArgs := []string{
+		"--json",
+	}
+	if librespeedServer != nil {
+		c.dataRetrieverArgs = append(dataRetrieverArgs, []string{"--server", fmt.Sprintf("%d", *librespeedServer)}...)
 	}
 
 	return c
@@ -109,7 +118,8 @@ func (c *collector) getResults() results {
 }
 
 func (c *collector) download() ([]byte, error) {
-	cmd := exec.Command(c.dataRetrieverCommand, "--json", "--server", "85")
+
+	cmd := exec.Command(*c.dataRetrieverCommand, c.dataRetrieverArgs...)
 	output, errRun := cmd.Output()
 	if errRun != nil {
 		log.Panicf("Command failed: %s", errRun)

@@ -17,12 +17,13 @@ func main() {
 	enableCollectorGo := kingpin.Flag("collectors.go", "Enable GoCollector").Bool()
 	enableCollectorProcess := kingpin.Flag("collectors.process", "Enable ProcessCollector").Bool()
 	dataRetrieverCommand := kingpin.Flag("data-retriever-command", "Command to call to get speed data").Default("speedtest-cli").ExistingFile()
+	librespeedServer := kingpin.Flag("librespeed.server", "Librespeed server to get speed data (zero means 'none specified')").Default("0").Uint8()
 
 	kingpin.Parse()
 
 	registry := prometheus.NewPedanticRegistry()
 	registry.MustRegister(
-		collector.NewCollector(*dataRetrieverCommand),
+		collector.NewCollector(dataRetrieverCommand, librespeedServer),
 	)
 	if *enableCollectorGo {
 		registry.MustRegister(
