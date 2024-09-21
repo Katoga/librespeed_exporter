@@ -44,6 +44,7 @@ func NewCollector(dataRetrieverCommand *string, librespeedServer *uint8) *collec
 }
 
 func (c *collector) Collect(ch chan<- prometheus.Metric) {
+	log.Println("collecting")
 	results := c.getResults()
 
 	ch <- prometheus.MustNewConstMetric(
@@ -118,12 +119,15 @@ func (c *collector) getResults() results {
 }
 
 func (c *collector) download() ([]byte, error) {
+	log.Println("downloading")
 
 	cmd := exec.Command(*c.dataRetrieverCommand, c.dataRetrieverArgs...)
 	output, errRun := cmd.Output()
 	if errRun != nil {
 		log.Panicf("Command failed: %s", errRun)
 	}
+
+	log.Println("downloaded")
 
 	return output, nil
 }
