@@ -3,10 +3,10 @@ package collector
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os/exec"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rs/zerolog"
 )
 
 type responseItem struct {
@@ -24,12 +24,14 @@ type results struct {
 }
 
 type collector struct {
+	log                  zerolog.Logger
 	dataRetrieverCommand *string
 	dataRetrieverArgs    []string
 }
 
-func NewCollector(dataRetrieverCommand *string, librespeedServer *uint8) *collector {
+func NewCollector(log zerolog.Logger, dataRetrieverCommand *string, librespeedServer *uint8) *collector {
 	c := &collector{
+		log:                  log.With().Str("component", "collector").Logger(),
 		dataRetrieverCommand: dataRetrieverCommand,
 	}
 
@@ -44,7 +46,7 @@ func NewCollector(dataRetrieverCommand *string, librespeedServer *uint8) *collec
 }
 
 func (c *collector) Collect(ch chan<- prometheus.Metric) {
-	log.Println("collecting")
+	c.log.Info().Msg("collecting")
 	results := c.getResults()
 
 	ch <- prometheus.MustNewConstMetric(
@@ -99,13 +101,13 @@ func (c *collector) Describe(ch chan<- *prometheus.Desc) {
 func (c *collector) getResults() results {
 	content, errDownload := c.download()
 	if errDownload != nil {
-		log.Panicf("Getting libresped data failed: %s", errDownload)
+		c.log.Panic().Msgf("Getting libresped data failed: %s", errDownload)
 	}
 
 	response := []responseItem{}
 	errJson := json.Unmarshal(content, &response)
 	if errJson != nil {
-		log.Panicf("Parsing JSON failed: %s", errJson)
+		c.log.Panic().Msgf("Parsing JSON failed: %s", errJson)
 	}
 
 	res := response[0]
@@ -119,15 +121,15 @@ func (c *collector) getResults() results {
 }
 
 func (c *collector) download() ([]byte, error) {
-	log.Println("downloading")
+	c.log.Info().Msg("downloading")
 
 	cmd := exec.Command(*c.dataRetrieverCommand, c.dataRetrieverArgs...)
 	output, errRun := cmd.Output()
 	if errRun != nil {
-		log.Panicf("Command failed: %s", errRun)
+		c.log.Panic().Msgf("Command failed: %s", errRun)
 	}
 
-	log.Println("downloaded")
+	c.log.Info().Msg("downloaded")
 
 	return output, nil
 }

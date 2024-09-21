@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"os"
 
 	"github.com/Katoga/librespeed_exporter/internal/collector"
 	"github.com/Katoga/librespeed_exporter/internal/server"
@@ -9,9 +9,12 @@ import (
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/rs/zerolog"
 )
 
 func main() {
+	log := zerolog.New(os.Stderr).With().Timestamp().Logger()
+
 	listenAddress := kingpin.Flag("web.listen-address", "Address to listen on").Default(":51423").TCP()
 	telemetryPath := kingpin.Flag("web.telemetry-path", "Path under which to expose metrics").Default("/metrics").String()
 	enableCollectorGo := kingpin.Flag("collectors.go", "Enable GoCollector").Bool()
@@ -23,7 +26,7 @@ func main() {
 
 	registry := prometheus.NewPedanticRegistry()
 	registry.MustRegister(
-		collector.NewCollector(dataRetrieverCommand, librespeedServer),
+		collector.NewCollector(log, dataRetrieverCommand, librespeedServer),
 	)
 	if *enableCollectorGo {
 		registry.MustRegister(
@@ -36,5 +39,8 @@ func main() {
 		)
 	}
 
-	log.Fatal(server.NewServer(registry).Serve(*listenAddress, telemetryPath))
+	log.Info().Msg("serving")
+
+	error := server.NewServer(log, registry).Serve(*listenAddress, telemetryPath)
+	log.Fatal().Msg(error.Error())
 }
