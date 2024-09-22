@@ -9,11 +9,16 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type responseServer struct {
+	Name string `json:"name"`
+	Url  string `json:"url"`
+}
 type responseItem struct {
-	Ping     float64 `json:"ping"`
-	Jitter   float64 `json:"jitter"`
-	Upload   float64 `json:"upload"`
-	Download float64 `json:"download"`
+	Ping     float64        `json:"ping"`
+	Jitter   float64        `json:"jitter"`
+	Upload   float64        `json:"upload"`
+	Download float64        `json:"download"`
+	Server   responseServer `json:"server"`
 }
 
 type results struct {
@@ -21,6 +26,7 @@ type results struct {
 	Download float64
 	Ping     float64
 	Jitter   float64
+	Server   responseServer
 }
 
 type collector struct {
@@ -53,44 +59,48 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 		prometheus.NewDesc(
 			"librespeed_upload_bps",
 			"Upload speed in bits per second",
-			nil,
+			[]string{"server"},
 			nil,
 		),
 		prometheus.GaugeValue,
 		results.Upload,
+		results.Server.Url,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		prometheus.NewDesc(
 			"librespeed_download_bps",
 			"Download speed in bits per second",
-			nil,
+			[]string{"server"},
 			nil,
 		),
 		prometheus.GaugeValue,
 		results.Download,
+		results.Server.Url,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		prometheus.NewDesc(
 			"librespeed_ping_seconds",
 			"Ping in seconds",
-			nil,
+			[]string{"server"},
 			nil,
 		),
 		prometheus.GaugeValue,
 		results.Ping,
+		results.Server.Url,
 	)
 
 	ch <- prometheus.MustNewConstMetric(
 		prometheus.NewDesc(
 			"librespeed_jitter_seconds",
 			"Jitter in seconds",
-			nil,
+			[]string{"server"},
 			nil,
 		),
 		prometheus.GaugeValue,
 		results.Jitter,
+		results.Server.Url,
 	)
 }
 
@@ -117,6 +127,7 @@ func (c *collector) getResults() results {
 		Download: res.Download,
 		Ping:     res.Ping,
 		Jitter:   res.Jitter,
+		Server:   res.Server,
 	}
 }
 
