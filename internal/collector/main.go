@@ -111,13 +111,13 @@ func (c *collector) Describe(ch chan<- *prometheus.Desc) {
 func (c *collector) getResults() results {
 	content, errDownload := c.download()
 	if errDownload != nil {
-		c.log.Panic().Msgf("Getting libresped data failed: %s", errDownload)
+		c.log.Panic().Err(errDownload).Msg("Getting libresped data failed")
 	}
 
 	response := []responseItem{}
 	errJson := json.Unmarshal(content, &response)
 	if errJson != nil {
-		c.log.Panic().Msgf("Parsing JSON failed: %s", errJson)
+		c.log.Panic().Err(errJson).Msg("Parsing JSON failed")
 	}
 
 	res := response[0]
@@ -137,7 +137,7 @@ func (c *collector) download() ([]byte, error) {
 	cmd := exec.Command(*c.dataRetrieverCommand, c.dataRetrieverArgs...)
 	output, errRun := cmd.Output()
 	if errRun != nil {
-		c.log.Panic().Msgf("Command failed: %s", errRun)
+		c.log.Panic().Err(errRun).Msg("Command failed")
 	}
 
 	c.log.Info().Msg("downloaded")

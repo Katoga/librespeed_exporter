@@ -13,5 +13,5 @@ func main() {
 
 	error := librespeed_exporter.NewLibrespeedExporter(log).Run()
 
-	log.Fatal().Msg(error.Error())
+	log.Fatal().Err(error)
 }
