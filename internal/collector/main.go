@@ -63,7 +63,7 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 			nil,
 		),
 		prometheus.GaugeValue,
-		results.Upload,
+		results.Upload*1000000,
 		results.Server.Url,
 	)
 
@@ -75,7 +75,7 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 			nil,
 		),
 		prometheus.GaugeValue,
-		results.Download,
+		results.Download*1000000,
 		results.Server.Url,
 	)
 
@@ -87,7 +87,7 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 			nil,
 		),
 		prometheus.GaugeValue,
-		results.Ping,
+		results.Ping/1000,
 		results.Server.Url,
 	)
 
@@ -99,7 +99,7 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 			nil,
 		),
 		prometheus.GaugeValue,
-		results.Jitter,
+		results.Jitter/1000,
 		results.Server.Url,
 	)
 }
