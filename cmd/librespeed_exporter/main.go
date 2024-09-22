@@ -1,8 +1,6 @@
-package main
+package librespeed_exporter
 
 import (
-	"os"
-
 	"github.com/Katoga/librespeed_exporter/internal/collector"
 	"github.com/Katoga/librespeed_exporter/internal/server"
 
@@ -12,9 +10,19 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func main() {
-	log := zerolog.New(os.Stderr).With().Timestamp().Logger()
+type librespeed_exporter struct {
+	log zerolog.Logger
+}
 
+func NewLibrespeedExporter(log zerolog.Logger) *librespeed_exporter {
+	le := &librespeed_exporter{
+		log: log,
+	}
+
+	return le
+}
+
+func (le *librespeed_exporter) Run() error {
 	listenAddress := kingpin.Flag("web.listen-address", "Address to listen on").Default(":51423").TCP()
 	telemetryPath := kingpin.Flag("web.telemetry-path", "Path under which to expose metrics").Default("/metrics").String()
 	enableCollectorGo := kingpin.Flag("collectors.go", "Enable GoCollector").Bool()
@@ -26,7 +34,7 @@ func main() {
 
 	registry := prometheus.NewPedanticRegistry()
 	registry.MustRegister(
-		collector.NewCollector(log, dataRetrieverCommand, librespeedServer),
+		collector.NewCollector(le.log, dataRetrieverCommand, librespeedServer),
 	)
 	if *enableCollectorGo {
 		registry.MustRegister(
@@ -39,8 +47,7 @@ func main() {
 		)
 	}
 
-	log.Info().Msg("serving")
+	le.log.Info().Msg("serving")
 
-	error := server.NewServer(log, registry).Serve(*listenAddress, telemetryPath)
-	log.Fatal().Msg(error.Error())
+	return server.NewServer(le.log, registry).Serve(*listenAddress, telemetryPath)
 }
