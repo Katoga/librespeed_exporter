@@ -36,16 +36,17 @@ type collector struct {
 }
 
 func NewCollector(log zerolog.Logger, dataRetrieverCommand *string, librespeedServer *uint8) *collector {
-	c := &collector{
-		log:                  log.With().Str("component", "collector").Logger(),
-		dataRetrieverCommand: dataRetrieverCommand,
-	}
-
 	dataRetrieverArgs := []string{
 		"--json",
 	}
 	if *librespeedServer != uint8(0) {
-		c.dataRetrieverArgs = append(dataRetrieverArgs, []string{"--server", fmt.Sprintf("%d", *librespeedServer)}...)
+		dataRetrieverArgs = append(dataRetrieverArgs, []string{"--server", fmt.Sprintf("%d", *librespeedServer)}...)
+	}
+
+	c := &collector{
+		log:                  log.With().Str("component", "collector").Logger(),
+		dataRetrieverCommand: dataRetrieverCommand,
+		dataRetrieverArgs:    dataRetrieverArgs,
 	}
 
 	return c
