@@ -58,10 +58,30 @@ func (c *collector) Collect(ch chan<- prometheus.Metric) {
 	results, errResults := c.getResults()
 	if errResults != nil {
 		c.log.Error().Err(errResults).Msg("collecting failed")
+		ch <- prometheus.MustNewConstMetric(
+			prometheus.NewDesc(
+				"librespeed_success",
+				"Success of speed measuring",
+				[]string{},
+				nil,
+			),
+			prometheus.GaugeValue,
+			0,
+		)
 		return
 	}
 
 	c.log.Info().Msg("collecting succeeded")
+	ch <- prometheus.MustNewConstMetric(
+		prometheus.NewDesc(
+			"librespeed_success",
+			"Success of speed measuring",
+			[]string{},
+			nil,
+		),
+		prometheus.GaugeValue,
+		1,
+	)
 	ch <- prometheus.MustNewConstMetric(
 		prometheus.NewDesc(
 			"librespeed_upload_bps",
