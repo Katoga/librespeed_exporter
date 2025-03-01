@@ -54,8 +54,14 @@ func NewCollector(log zerolog.Logger, dataRetrieverCommand *string, librespeedSe
 
 func (c *collector) Collect(ch chan<- prometheus.Metric) {
 	c.log.Info().Msg("collecting")
-	results := c.getResults()
 
+	results, errResults := c.getResults()
+	if errResults != nil {
+		c.log.Error().Err(errResults).Msg("collecting failed")
+		return
+	}
+
+	c.log.Info().Msg("collecting succeeded")
 	ch <- prometheus.MustNewConstMetric(
 		prometheus.NewDesc(
 			"librespeed_upload_bps",
@@ -109,16 +115,16 @@ func (c *collector) Describe(ch chan<- *prometheus.Desc) {
 	prometheus.DescribeByCollect(c, ch)
 }
 
-func (c *collector) getResults() results {
+func (c *collector) getResults() (results, error) {
 	content, errDownload := c.download()
 	if errDownload != nil {
-		c.log.Panic().Err(errDownload).Msg("Getting libresped data failed")
+		return results{}, errDownload
 	}
 
 	response := []responseItem{}
 	errJson := json.Unmarshal(content, &response)
 	if errJson != nil {
-		c.log.Panic().Err(errJson).Msg("Parsing JSON failed")
+		return results{}, errJson
 	}
 
 	res := response[0]
@@ -129,7 +135,7 @@ func (c *collector) getResults() results {
 		Ping:     res.Ping,
 		Jitter:   res.Jitter,
 		Server:   res.Server,
-	}
+	}, nil
 }
 
 func (c *collector) download() ([]byte, error) {
@@ -138,7 +144,7 @@ func (c *collector) download() ([]byte, error) {
 	cmd := exec.Command(*c.dataRetrieverCommand, c.dataRetrieverArgs...)
 	output, errRun := cmd.Output()
 	if errRun != nil {
-		c.log.Panic().Err(errRun).Msg("Command failed")
+		return nil, errRun
 	}
 
 	c.log.Info().Msg("downloaded")
