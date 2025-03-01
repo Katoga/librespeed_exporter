@@ -44,7 +44,7 @@ func NewCollector(log zerolog.Logger, dataRetrieverCommand *string, librespeedSe
 	dataRetrieverArgs := []string{
 		"--json",
 	}
-	if librespeedServer != nil {
+	if *librespeedServer != uint8(0) {
 		c.dataRetrieverArgs = append(dataRetrieverArgs, []string{"--server", fmt.Sprintf("%d", *librespeedServer)}...)
 	}
 
