@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
@@ -55,7 +56,18 @@ func NewCollector(log zerolog.Logger, dataRetrieverCommand *string, librespeedSe
 func (c *collector) Collect(ch chan<- prometheus.Metric) {
 	c.log.Info().Msg("collecting")
 
-	results, errResults := c.getResults()
+	duration, results, errResults := c.getResults()
+	ch <- prometheus.MustNewConstMetric(
+		prometheus.NewDesc(
+			"librespeed_duration_seconds",
+			"Duration of the mearurement in seconds",
+			[]string{"server"},
+			nil,
+		),
+		prometheus.GaugeValue,
+		duration.Seconds(),
+		results.Server.Url,
+	)
 	if errResults != nil {
 		c.log.Error().Err(errResults).Msg("collecting failed")
 		ch <- prometheus.MustNewConstMetric(
@@ -135,39 +147,43 @@ func (c *collector) Describe(ch chan<- *prometheus.Desc) {
 	prometheus.DescribeByCollect(c, ch)
 }
 
-func (c *collector) getResults() (results, error) {
-	content, errDownload := c.download()
+func (c *collector) getResults() (time.Duration, results, error) {
+	duration, content, errDownload := c.download()
 	if errDownload != nil {
-		return results{}, errDownload
+		return duration, results{}, errDownload
 	}
 
 	response := []responseItem{}
 	errJson := json.Unmarshal(content, &response)
 	if errJson != nil {
-		return results{}, errJson
+		return duration, results{}, errJson
 	}
 
 	res := response[0]
 
-	return results{
-		Upload:   res.Upload,
-		Download: res.Download,
-		Ping:     res.Ping,
-		Jitter:   res.Jitter,
-		Server:   res.Server,
-	}, nil
+	return duration,
+		results{
+			Upload:   res.Upload,
+			Download: res.Download,
+			Ping:     res.Ping,
+			Jitter:   res.Jitter,
+			Server:   res.Server,
+		}, nil
 }
 
-func (c *collector) download() ([]byte, error) {
+func (c *collector) download() (time.Duration, []byte, error) {
 	c.log.Info().Msg("downloading")
 
 	cmd := exec.Command(*c.dataRetrieverCommand, c.dataRetrieverArgs...)
+	start := time.Now()
 	output, errRun := cmd.Output()
+	duration := time.Since(start)
+
 	if errRun != nil {
-		return nil, errRun
+		return duration, nil, errRun
 	}
 
 	c.log.Info().Msg("downloaded")
 
-	return output, nil
+	return duration, output, nil
 }
