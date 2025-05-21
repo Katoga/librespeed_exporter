@@ -28,7 +28,8 @@ func (le *librespeed_exporter) Run() error {
 	enableCollectorGo := kingpin.Flag("collectors.go", "Enable GoCollector").Bool()
 	enableCollectorProcess := kingpin.Flag("collectors.process", "Enable ProcessCollector").Bool()
 	librespeedCommand := kingpin.Flag("librespeed.command", "Command to call to get speed data").Default("librespeed-cli").ExistingFile()
-	librespeedServer := kingpin.Flag("librespeed.server", "Librespeed server to get speed data (zero means 'none specified')").Default("0").Uint8()
+
+	librespeedServer := kingpin.Arg("server", "Librespeed server to get speed data").Uint8()
 
 	kingpin.Parse()
 
