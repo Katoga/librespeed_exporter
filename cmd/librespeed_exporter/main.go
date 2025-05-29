@@ -11,18 +11,22 @@ import (
 )
 
 type librespeed_exporter struct {
-	log zerolog.Logger
+	log     zerolog.Logger
+	version string
 }
 
-func NewLibrespeedExporter(log zerolog.Logger) *librespeed_exporter {
+func NewLibrespeedExporter(log zerolog.Logger, version string) *librespeed_exporter {
 	le := &librespeed_exporter{
-		log: log,
+		log:     log,
+		version: version,
 	}
 
 	return le
 }
 
 func (le *librespeed_exporter) Run() error {
+	kingpin.Version(le.version)
+
 	listenAddress := kingpin.Flag("web.listen-address", "Address to listen on").Default(":51423").TCP()
 	telemetryPath := kingpin.Flag("web.telemetry-path", "Path under which to expose metrics").Default("/metrics").String()
 	enableCollectorGo := kingpin.Flag("collectors.go", "Enable GoCollector").Bool()
