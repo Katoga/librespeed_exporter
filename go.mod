@@ -1,6 +1,6 @@
 module github.com/Katoga/librespeed_exporter
 
-go 1.25.4
+go 1.26.2
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
