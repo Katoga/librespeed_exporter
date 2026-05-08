@@ -39,6 +39,7 @@ type collector struct {
 func NewCollector(log zerolog.Logger, dataRetrieverCommand *string, librespeedServer *uint8) *collector {
 	dataRetrieverArgs := []string{
 		"--json",
+		"--insecure",
 	}
 	if *librespeedServer != uint8(0) {
 		dataRetrieverArgs = append(dataRetrieverArgs, []string{"--server", fmt.Sprintf("%d", *librespeedServer)}...)
